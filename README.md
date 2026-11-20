@@ -75,7 +75,7 @@ See [documentation](./docs/wsl.md).
       [VScode](https://apps.microsoft.com/detail/xp9khm4bk9fz7q)
 
 :warning: Examples and scripts can _only_ be run with a _Git Bash_ terminal.
-There are mutliple different options to open it.
+There are multiple different options to open it.
 Choose one that works best for you:
 
 * Open _Git Bash_ from the Start menu or from
@@ -83,7 +83,7 @@ Choose one that works best for you:
 * Alternatively, you can use VSCode:
    * Optionally: Set it as a default in _Settings > Features > Terminal > Integrated > Default Profile > Windows > Git Bash_.
    * Open a new _Git Bash_ as a one-off
-     by clikcing on the dropdown arrow next to the plus icon in the terminal panel and selecting _Git Bash_.
+     by clicking on the dropdown arrow next to the plus icon in the terminal panel and selecting _Git Bash_.
 
 You can tell that it's a _Git Bash_ terminal if you see a prompt that looks like this:
 ```bash
@@ -94,7 +94,7 @@ $
 
 ## Linux
 
-You may need to install git if not alredy installed:
+You may need to install git if not already installed:
 ```bash
 sudo apt-get install git
 ```
@@ -103,7 +103,7 @@ You can use any terminal including built-in.
 
 ## macOS
 
-No special stesps are required. You can use any terminal including built-in.
+No special steps are required. You can use any terminal including built-in.
 
 * Optional: If you hit issues with `bash`, you may have a version older than
   is currently supported. If so, you can use
@@ -136,16 +136,18 @@ Your contributions are welcome.
 | Altera Cyclone IV  | Terasic DE2-115      | [`de2_115`](./boards/de2_115/)                       | [Intel Quartus Prime Lite](./docs/IntelQuartus.md) |
 | Altera Cyclone V   | Terasic DE0-CV       | [`de0_cv`](./boards/de0_cv/)                         | [Intel Quartus Prime Lite](./docs/IntelQuartus.md) |
 | Altera Cyclone V   | Terasic DE10-Nano    | [`de10_nano`](./boards/de10_nano/)                   | [Intel Quartus Prime Lite](./docs/IntelQuartus.md) |
+| Altera Agilex 5    | Terasic DE25-Nano    | [`de25_nano`](./boards/de25_nano/README.md)           | Quartus Prime Pro |
 | Altera Cyclone V SoC | Terasic DE0-Nano SoC | [`de0_nano_soc_vga_pmod`](./boards/de0_nano_soc_vga_pmod/) <br/> [`de0_nano_soc_vga666`](./boards/de0_nano_soc_vga666/) | [Intel Quartus Prime Lite](./docs/IntelQuartus.md) |
 | Altera Cyclone V SoC | Terasic DE1-SoC    | [`de1_soc`](./boards/de1_soc/)                       | [Intel Quartus Prime Lite](./docs/IntelQuartus.md) |
 | Altera Cyclone V GX | Terasic C5GX        | [`c5gx`](./boards/c5gx/)                             | [Intel Quartus Prime Lite](./docs/IntelQuartus.md) |
 | Altera MAX 10      | Terasic DE10-Lite    | [`de10_lite`](./boards/de10_lite/)                   | [Intel Quartus Prime Lite](./docs/IntelQuartus.md) |
 | Emooc              | CC                   | [`emooc_cc`](./boards/emooc_cc/)                     |                                                    |
-| Gowin GW5AST-LV138 | [SiPeed Tang Mega 138K](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k.html) | [`tang_mega_138k_lcd_480_272_tm1638`](./boards/tang_mega_138k_lcd_480_272_tm1638/) <br/> [`tang_mega_138k_pro_lcd_480_272_no_tm1638`](./boards/tang_mega_138k_pro_lcd_480_272_no_tm1638/) <br/> [`tang_mega_138k_pro_lcd_480_272_tm1638`](./boards/tang_mega_138k_pro_lcd_480_272_tm1638/) | [Gowin EDA](./docs/GowinEDA.md) |
+| Gowin GW5AST-138   | [SiPeed Tang Mega 138K](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k.html) | [`tang_mega_138k_lcd_480_272_tm1638`](./boards/tang_mega_138k_lcd_480_272_tm1638/) <br/> [`tang_mega_138k_pro_lcd_480_272_no_tm1638`](./boards/tang_mega_138k_pro_lcd_480_272_no_tm1638/) <br/> [`tang_mega_138k_pro_lcd_480_272_tm1638`](./boards/tang_mega_138k_pro_lcd_480_272_tm1638/) | [Gowin EDA](./docs/GowinEDA.md) |
 | Gowin GW1NR-9      | [SiPeed Tang Nano 9K](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html) | [`tang_nano_9k_lcd_480_272_no_tm1638_yosys`](./boards/tang_nano_9k_lcd_480_272_no_tm1638_yosys/) <br/> [`tang_nano_9k_lcd_480_272_tm1638`](./boards/tang_nano_9k_lcd_480_272_tm1638/) <br/> [`tang_nano_9k_lcd_480_272_tm1638_yosys`](./boards/tang_nano_9k_lcd_480_272_tm1638_yosys/) <br/> [`tang_nano_9k_lcd_800_480_no_tm1638`](./boards/tang_nano_9k_lcd_800_480_no_tm1638/) <br/> [`tang_nano_9k_lcd_800_480_no_tm1638_yosys`](./boards/tang_nano_9k_lcd_800_480_no_tm1638_yosys/) <br/> [`tang_nano_9k_lcd_800_480_tm1638`](./boards/tang_nano_9k_lcd_800_480_tm1638/) <br/> [`tang_nano_9k_lcd_800_480_tm1638_yosys`](./boards/tang_nano_9k_lcd_800_480_tm1638_yosys/) <br/> [`tang_nano_9k_lcd_ml6485_no_tm1638_yosys`](./boards/tang_nano_9k_lcd_ml6485_no_tm1638_yosys/) <br/> [`tang_nano_9k_lcd_ml6485_tm1638_yosys`](./boards/tang_nano_9k_lcd_ml6485_tm1638_yosys/) | [Gowin EDA](./docs/GowinEDA.md) <br/> [Yosys](./docs/Yosys.md) |
-| Gowin GW2A-LV18    | [SiPeed Tang Primer 20K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) | [`tang_primer_20k_dock_hdmi_no_tm1638`](./boards/tang_primer_20k_dock_hdmi_no_tm1638/) <br/> [`tang_primer_20k_dock_hdmi_tm1638`](./boards/tang_primer_20k_dock_hdmi_tm1638/) <br/> [`tang_primer_20k_dock_no_hdmi_no_tm1638`](./boards/tang_primer_20k_dock_no_hdmi_no_tm1638/) <br/> [`tang_primer_20k_dock_no_hdmi_tm1638`](./boards/tang_primer_20k_dock_no_hdmi_tm1638/) <br/> [`tang_primer_20k_lite`](./boards/tang_primer_20k_lite/) | [Gowin EDA](./docs/GowinEDA.md) |
-| Gowin GW5A-LV25    | [SiPeed Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [`tang_primer_25k`](./boards/tang_primer_25k/)       | [Gowin EDA](./docs/GowinEDA.md) |
-| Gowin GW12AR-18    | [Sipeed Tang Nano 20K](https://wiki.sipeed.com/hardware/en/tang/tang-nano-20k/nano-20k.html) | [`tang_nano_20k_hdmi_tm1638`](./boards/tang_nano_20k_hdmi_tm1638/) <br/> [`tang_nano_20k_lcd_800_480_tm1638`](./boards/tang_nano_20k_lcd_800_480_tm1638/) | [Gowin EDA](./docs/GowinEDA.md) |
+| Gowin GW2A-18      | [SiPeed Tang Primer 20K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) | [`tang_primer_20k_dock_lcd_800_480_no_tm1638`](./boards/tang_primer_20k_dock_lcd_800_480_no_tm1638/)<br/>[`tang_primer_20k_dock_lcd_800_480_tm1638`](./boards/tang_primer_20k_dock_lcd_800_480_tm1638/)<br/>[`tang_primer_20k_dock_hdmi_no_tm1638`](./boards/tang_primer_20k_dock_hdmi_no_tm1638/) <br/> [`tang_primer_20k_dock_hdmi_tm1638`](./boards/tang_primer_20k_dock_hdmi_tm1638/) <br/> [`tang_primer_20k_dock_no_hdmi_no_tm1638`](./boards/tang_primer_20k_dock_no_hdmi_no_tm1638/) <br/> [`tang_primer_20k_dock_no_hdmi_tm1638`](./boards/tang_primer_20k_dock_no_hdmi_tm1638/) <br/> [`tang_primer_20k_lite`](./boards/tang_primer_20k_lite/) | [Gowin EDA](./docs/GowinEDA.md) |
+| Gowin GW5A-25      | [SiPeed Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [`tang_primer_25k`](./boards/tang_primer_25k/)       | [Gowin EDA](./docs/GowinEDA.md) |
+| Gowin GW2AR-18     | [Sipeed Tang Nano 20K](https://wiki.sipeed.com/hardware/en/tang/tang-nano-20k/nano-20k.html) | [`tang_nano_20k_hdmi_tm1638`](./boards/tang_nano_20k_hdmi_tm1638/) <br/> [`tang_nano_20k_lcd_800_480_tm1638`](./boards/tang_nano_20k_lcd_800_480_tm1638/) | [Gowin EDA](./docs/GowinEDA.md) |
+| Gowin GW5AT-138    | [OrangePi MSOC](http://www.orangepi.cn/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-MSOC.html) | [orangepi_msoc](./boards/orangepi_msoc/) | [Gowin EDA](./docs/GowinEDA.md) |
 | Lattice ECP5       | [OrangeCrab](https://github.com/orangecrab-fpga/orangecrab-hardware) | [`orangecrab_ecp5_yosys`](./boards/orangecrab_ecp5_yosys/) | [Yosys](./docs/Yosys.md)                           |
 | Lattice ECP5       | [Karnix](https://github.com/Fabmicro-LLC/Karnix_ASB-254) | [`karnix_ecp5_yosys`](./boards/karnix_ecp5_yosys/)   | [Yosys](./docs/Yosys.md)                           |
 | Lattice iCE40      | [Lattice iCE40-HX8K](https://www.latticesemi.com/Products/DevelopmentBoardsAndKits/iCE40HX8KBreakoutBoard.aspx) | [`ice40hx8k_evb_yosys`](./boards/ice40hx8k_evb_yosys/) | [Yosys](./docs/Yosys.md)                           |
@@ -164,8 +166,8 @@ Your contributions are welcome.
 
 Not all boards include everything on the same board. To compensate for this we use external boards and hardware to extend input and output capabilities. The most common external hardware is:
 
-* All variants: [INMP441](https://www.aliexpress.us/item/3256803154251183.html) [I2S](https://en.wikipedia.org/wiki/I%C2%B2S) microphone
-* Almost all variants: PCM5102 [I2S](https://en.wikipedia.org/wiki/I%C2%B2S) stereo audio DAC.
+* All variants: [INMP441](https://aliexpress.com/item/32965793029.html?sku_id=12000046411935883), [MSM261S4030H0](https://aliexpress.com/item/1005004732421731.html) [I2S](https://en.wikipedia.org/wiki/I%C2%B2S) microphone
+* Almost all variants: [PCM5102A](https://aliexpress.com/item/1005008807353970.html), [PCM5100A](https://aliexpress.com/item/1005009581227956.html), [MAX98357](https://aliexpress.com/item/1005009765862559.html), [UDA1334A](https://aliexpress.com/item/1005008835338473.html) [I2S](https://en.wikipedia.org/wiki/I%C2%B2S) stereo audio DAC.
   Some boards do not require an external DAC as they have an on-board DAC (Tang Nano 20K)
 * `tm1638` or `no_tm1638`: with and without [TM1638](https://www.aliexpress.us/item/3256802635508991.html): 8-digit 7-segment display with 8 buttons (enabled in `tm1638` variants)
 * `hdmi`: HDMI on-board output
@@ -177,6 +179,18 @@ Not all boards include everything on the same board. To compensate for this we u
 # Verilog Events Across the World
 
 This repository was used during the following events:
+
+[Verilog Meetup at California Polytechnic State University, San Luis Obispo](https://verilog-meetup.com/2025/10/29/calpoly-slo-report/)
+
+![Verilog Meetup at California Polytechnic State University, San Luis Obispo](https://github.com/yuri-panchul/basics-graphics-music/blob/main/misc/2025_calpoly_slo.jpg)
+
+[FPGA Hackathon on EDA Connect conference in Yerevan, Armenia](https://verilog-meetup.com/2025/04/13/armenia-eda-connect/)
+
+![FPGA Hackathon on EDA Connect conference in Yerevan, Armenia](https://github.com/yuri-panchul/basics-graphics-music/blob/main/misc/2025_yerevan_armenia.jpg)
+
+[Verilog Meetup workshop we did at Universidad autónoma de Baja California in Tijuana](https://verilog-meetup.com/2025/02/26/uabc-tijuana-mexico-workshop/)
+
+![Verilog Meetup workshop we did at Universidad autónoma de Baja California in Tijuana](https://github.com/yuri-panchul/basics-graphics-music/blob/main/misc/2025_tijuana_mexico.jpg)
 
 [Hacker Dojo in Mountain View, California in 2024](https://verilog-meetup.com)
 

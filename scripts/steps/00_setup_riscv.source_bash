@@ -1,0 +1,557 @@
+expected_source_script=00_setup.source_bash
+
+if [ -z "$BASH_SOURCE" ]
+then
+    printf "script \"%s\" should be sourced from \"%s\"\n"  \
+           "$0" "$expected_source_script" 1>&2
+
+    exit 1
+fi
+
+this_script=$(basename "${BASH_SOURCE[0]}")
+source_script=$(basename "${BASH_SOURCE[1]}")
+
+if [ -z "$source_script" ]
+then
+    printf "script \"%s\" should be sourced from  \"%s\"\n"  \
+           "$this_script" "$expected_source_script" 1>&2
+
+    return 1
+fi
+
+if [ "$source_script" != $expected_source_script ]
+then
+    printf "script \"%s\" should be sourced from  \"%s\", not \"%s\"\n"  \
+           "$this_script" "$expected_source_script" "$source_script" 1>&2
+
+    exit 1
+fi
+
+#-----------------------------------------------------------------------------
+
+program_mem32=program.mem32
+
+#-----------------------------------------------------------------------------
+
+riscv_find_linker_script ()
+{
+    # First argument if present, otherwise ..
+    local dir="${1:-..}"
+    # find_opt is an array of variables. It allows to pass '*.ld' (with quotes)
+    # as an argument which is important for finding all linker scripts.
+    find_opt=(-mindepth 1 -maxdepth 1 -type f -name '*.ld' -print)
+    linker_script=$("$find_to_run" "$dir" "${find_opt[@]}" | head -1)
+    [ -n "$linker_script" ] || error "Linker script not found in '$dir'"
+
+    all_linker_scripts=$($find_to_run "$dir" "${find_opt[@]}" | xargs echo)
+
+    if [ "$linker_script" != "$all_linker_scripts" ]
+    then
+        warning "multiple presumable linker scripts found:" \
+                "'$all_linker_scripts'."                    \
+                "Using '$linker_script'."
+    fi
+}
+
+#-----------------------------------------------------------------------------
+
+riscv_try_install_dir ()
+{
+    local dir="$1"
+
+    [ -z "${riscv_dir-}" ] && [ -d "$dir" ] || return 0
+
+    attempt_riscv_install_parent_dirs="${attempt_riscv_install_parent_dirs:+$attempt_riscv_install_parent_dirs or }'$dir'"
+
+    if [ -d "$dir/xpack/bin" ]
+    then
+        riscv_dir="$dir/xpack"
+    else
+        # Permission errors go to /dev/null
+
+        [[ "$OSTYPE" = "darwin"* ]] && exclude_Desktop_for_mac="-type d -name Desktop -prune -o"
+
+        find_opt="${exclude_Desktop_for_mac-} -mindepth 1 -maxdepth 2 -type d -name xpack-riscv-none-elf-gcc-*[0-9] -exec test -d {}/bin ; -print"
+
+        set +o pipefail
+        riscv_dir=$($find_to_run "$dir" $find_opt 2>/dev/null | sort | tail -1)
+        set -o pipefail
+
+        [ -n "${riscv_dir-}" ] || return 0
+
+        set +o pipefail
+        all_riscv_dirs=$($find_to_run "$dir" $find_opt 2>/dev/null | xargs echo)
+        set -o pipefail
+
+        if [ "$riscv_dir" != "$all_riscv_dirs" ]
+        then
+            warning "multiple versions of XPACK RISC-V GCC toolchain"     \
+                    "installed in '$dir': '$all_riscv_dirs'"              \
+                    "Using '$riscv_dir' which appears to be the latest."
+        fi
+    fi
+
+    riscv_gcc="$riscv_dir/bin/riscv-none-elf-gcc"
+    riscv_objcopy="$riscv_dir/bin/riscv-none-elf-objcopy"
+    riscv_objdump="$riscv_dir/bin/riscv-none-elf-objdump"
+
+    [ -x "$riscv_gcc$exe"     ] || error "expected executable '$riscv_gcc$exe'"
+    [ -x "$riscv_objcopy$exe" ] || error "expected executable '$riscv_objcopy$exe'"
+    [ -x "$riscv_objdump$exe" ] || error "expected executable '$riscv_objdump$exe'"
+
+    is_command_available "$riscv_gcc"     || error "expected command available '$riscv_gcc'"
+    is_command_available "$riscv_objcopy" || error "expected command available '$riscv_objcopy'"
+    is_command_available "$riscv_objdump" || error "expected command available '$riscv_objdump'"
+
+    info "found XPACK RISC-V GCC toolchain in '$riscv_dir'"
+
+    if [[ "$OSTYPE" = "darwin"* ]] ; then
+        remove_macos_quarantine_attr "$riscv_dir"
+    fi
+}
+
+#-----------------------------------------------------------------------------
+
+riscv_software_toolchain_setup ()
+{
+    #-------------------------------------------------------------------------
+
+    PY3=
+
+    if python3 -c "print('Ok')" &>/dev/null; then
+      PY3=python3
+    elif python -c "print('Ok')" &>/dev/null; then
+      PY3=python
+    else
+      error "Python is not installed." \
+            "Please install it."
+    fi
+
+    #-------------------------------------------------------------------------
+
+    if  is_command_available riscv-none-elf-gcc &&
+        is_command_available riscv-none-elf-objcopy &&
+        is_command_available riscv-none-elf-objdump
+    then
+        riscv_gcc=riscv-none-elf-gcc
+        riscv_objcopy=riscv-none-elf-objcopy
+        riscv_objdump=riscv-none-elf-objdump
+
+        info "using $(which riscv-none-elf-gcc)"
+        return 0 # Already set up
+    fi
+
+    #-------------------------------------------------------------------------
+
+    if  is_command_available riscv64-unknown-elf-gcc &&
+        is_command_available riscv64-unknown-elf-objcopy &&
+        is_command_available riscv64-unknown-elf-objdump
+    then
+        riscv_gcc=riscv64-unknown-elf-gcc
+        riscv_objcopy=riscv64-unknown-elf-objcopy
+        riscv_objdump=riscv64-unknown-elf-objdump
+
+        info "using $(which riscv64-unknown-elf-gcc)"
+        return 0 # Already set up
+    fi
+
+    #-------------------------------------------------------------------------
+
+    if [[ "$OSTYPE" = "darwin"* ]]
+    then
+        riscv_try_install_dir "/Applications"
+        riscv_try_install_dir "$HOME/Applications"
+    fi
+
+        riscv_try_install_dir "$HOME"
+        riscv_try_install_dir "$HOME/install"
+
+    if [  "$OSTYPE" = "linux-gnu"  ]
+    then
+        riscv_try_install_dir /opt
+        riscv_try_install_dir /tools
+    fi
+
+    if [ "$OSTYPE" = "cygwin" ] ||
+       [ "$OSTYPE" = "msys"   ]
+    then
+        riscv_try_install_dir /c
+        riscv_try_install_dir /d
+        riscv_try_install_dir /e
+    fi
+
+        riscv_try_install_dir "$HOME/Downloads"
+
+    #-------------------------------------------------------------------------
+
+    if [ -z "${riscv_gcc-}" ]
+    then
+        error "expected to find XPACK RISC-V GCC toolchain"                              \
+              "in ${attempt_riscv_install_parent_dirs}."                                 \
+              "You can download a variant of the toolchain from"                         \
+              "https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/ ."  \
+              "On Debian-derived distributions you can install the toolchain"            \
+              "using 'sudo apt install gcc-riscv64-unknown-elf'."
+    fi
+}
+
+#-----------------------------------------------------------------------------
+
+riscv_create_core_select_file ()
+{
+    local select_file="$1"
+
+    > "$select_file"
+
+    for i_riscv_core in $available_riscv_cores
+    do
+        comment="# "
+        [ $i_riscv_core == $riscv_core ] && comment=""
+        printf "$comment%s\n" "$i_riscv_core" >> "$select_file"
+    done
+
+    info "Created a RISC-V core selection file: \"$select_file\""
+}
+
+#-----------------------------------------------------------------------------
+
+riscv_setup_core_for_software ()
+{
+    available_riscv_cores="aps yrv picorv32"
+
+    #-------------------------------------------------------------------------
+
+    for riscv_core in $available_riscv_cores
+    do
+        if [[ "$PWD" =~ ^$lab_dir ]] &&
+            [[ "$PWD" =~ ^(.*_$riscv_core)/program(/.*)?$ ]]
+        then
+            info "RISC-V core selected: $riscv_core"
+            cpu_dir="${BASH_REMATCH[1]}/"
+            return
+        fi
+    done
+
+    #-------------------------------------------------------------------------
+
+    # Outside CPU code tree
+
+    local select_file="$package_dir/riscv_core_selection"
+
+    #-------------------------------------------------------------------------
+
+    if [[ $script =~ choose.*riscv_core ]]
+    then
+        offer_to_create_a_new_riscv_core_select_file=1
+    else
+        offer_to_create_a_new_riscv_core_select_file=0
+    fi
+
+    #-------------------------------------------------------------------------
+
+    current_board_message=
+
+    if [ -f "$select_file" ]
+    then
+        # Consider making it more simple
+        # riscv_core=$(grep -m 1 -o '^[[:alnum:]_]*$' "$select_file" || true)
+
+        riscv_core=$(grep -o '^[^#/-]*' "$select_file" | grep -m 1 -o '^[[:alnum:]_]*' || true)
+        select_file_contents=$(cat "$select_file")
+
+        if [ -z "$riscv_core" ] ; then
+            offer_to_create_a_new_riscv_core_select_file=1
+        elif [ $offer_to_create_a_new_riscv_core_select_file = 1 ] ; then
+            current_board_message="The currently selected RISC-V cores: $riscv_core. "
+        fi
+    fi
+
+    #-------------------------------------------------------------------------
+
+    if    ! [ -f "$select_file" ]  \
+       ||   [ $offer_to_create_a_new_riscv_core_select_file = 1 ]
+    then
+        info "${current_board_message}Please select a RISC-V core among the following supported:"
+        PS3="Your choice (a number): "
+
+        select riscv_core in $available_riscv_cores exit
+        do
+            if [ -z "$riscv_core" ] ; then
+                info "Invalid RISC-V core choice, please choose one of the listed numbers again"
+                continue
+            fi
+
+            if [ $riscv_core == "exit" ] ; then
+                info "a new RISC-V core is not selected, please run the script again"
+                exit 0
+            fi
+
+            riscv_create_core_select_file "$select_file"
+            break
+        done
+    fi
+
+    if ! [[ " $available_riscv_cores " =~ " $riscv_core " ]] ; then
+        # This error may happen if people mess with the selection file
+
+        error "The selected RISC-V core $riscv_core"  \
+              "is not one of the available boards: $available_riscv_cores"
+    fi
+
+    info "RISC-V core selected: $riscv_core"
+
+    # If there is no file or directory, that meets specified glob expression,
+    # this expression will be proceed as is (with asterisk).
+    # This command changes this behavior to make an expression to be empty
+    # so this 'for' cycle will execute only if there is some path that meets
+    # this glob expression
+    shopt -s nullglob
+
+    matches=()
+
+    for path in "$lab_dir"/5_cpu/5_*$riscv_core; do
+        [[ -d "$path" ]] && matches+=("$path")
+    done
+
+    # after the cycle we restore default glob behavior
+    shopt -u nullglob
+
+    case ${#matches[@]} in
+        0)
+            error "Can't find directory that meets 5_*$riscv_core expression inside '$lab_dir/5_cpu/'"
+            ;;
+        1)
+            cpu_dir="${matches[0]}"
+            ;;
+        *)
+            error "Found more than one directory, that meets 5_*$riscv_core expression inside '$lab_dir/5_cpu/': ${matches[*]}"
+            ;;
+    esac
+}
+
+#-----------------------------------------------------------------------------
+
+riscv_software_toolchain_run ()
+{
+    riscv_setup_core_for_software
+    riscv_find_linker_script "$cpu_dir/program"
+
+    src=
+
+    if ls ../*.[sS] >/dev/null 2>&1 ; then
+        src="../*.[sS]"
+    fi
+
+    if ls ../*.[cC] >/dev/null 2>&1 ; then
+        src="${src:+$src }../*.[cC]"
+    fi
+
+    [ -n "$src" ] || error "no .s, .S, .c or .C files in the directory"
+
+    cp "$linker_script" linker_script.ld
+
+    # TODO: Consider removing -static since we already have -nostdlib
+    # Check with all variants of GCC
+
+    $riscv_gcc \
+        -DRISCV_CORE=RISCV_CORE_$(printf '%s' "$riscv_core" | tr '[:lower:]' '[:upper:]') \
+        -I "$cpu_dir/program" \
+        -ffreestanding \
+        -fverbose-asm \
+        -mabi=ilp32 \
+        -march=rv32i_zbs_zicsr \
+        -nostdlib \
+        -O3 \
+        -save-temps \
+        -static \
+        -T linker_script.ld \
+        -Wa,-adhln=asm.lst \
+        -Wl,--build-id=none \
+        -Wl,-Map=map.txt \
+        -Wl,--no-warn-rwx-segments \
+        $src
+
+    $riscv_objdump -dx a.out > objdump_out.txt
+
+    case $riscv_core in
+        "aps")
+            $riscv_objcopy -O verilog --verilog-data-width=4 a.out final
+            ;;
+        "yrv")
+            info "YRV CPU Build"
+            $riscv_objcopy -O binary a.out final
+            $PY3 "$script_dir/gcc/freedom-bin2hex-banks.py" --banks --bit-width 32 final $program_mem32
+            cp *bank* $cpu_dir/cpu
+            ;;        
+        *)
+            $riscv_objcopy -O binary a.out final
+            $PY3 "$script_dir/gcc/freedom-bin2hex.py" -w32 final > $program_mem32
+            ;;
+    esac
+
+    riscv_upload_software_to_the_board_using_uart
+}
+
+#-----------------------------------------------------------------------------
+
+riscv_upload_software_to_the_board_using_uart ()
+{
+    set +o pipefail
+
+    if [[ "$OSTYPE" == "linux-gnu"* ]]
+    then
+        tty_suffix="USB"
+        git_bash=
+
+    elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" ]]
+    then
+        tty_suffix="S"
+        git_bash="Git Bash "
+
+    elif [[ "$OSTYPE" = "darwin"* ]]
+    then
+        tty_suffix=".usbserial-"
+        git_bash=""
+    fi
+
+    dev_name_in_err="$git_bash/dev/tty${tty_suffix}"
+
+    available_uart_ports=$(ls /dev/tty${tty_suffix}* 2>/dev/null |
+        tr "\r\n" " "                                            |
+        sed 's/ $//g'                                            |
+        sed "s|/dev/tty$tty_suffix||g")
+
+    set -o pipefail
+
+    [ -n "$available_uart_ports" ] ||
+    error "no active $dev_name_in_err devices for UART"
+
+    uart_port="$available_uart_ports"
+
+    #-------------------------------------------------------------------------
+
+    last_uart_port_file="$package_dir/last_uart_port"
+
+    #-------------------------------------------------------------------------
+
+    if [[ "$available_uart_ports" == *" "* ]]
+    then
+        warning "multiple $dev_name_in_err devices for UART: $available_uart_ports"
+
+        default_uart_port=
+
+        if [ -f "$last_uart_port_file" ] ; then
+            default_uart_port=$(head -1 "$last_uart_port_file" |
+            grep -E '^[0-9]+$'                                 |
+            tr "\r\n" " "                                      |
+            sed 's/ $//g'                                      )
+        fi
+
+        if [ -n "$default_uart_port" ] ; then
+            info "default UART port is /dev/tty${tty_suffix}$default_uart_port"
+        fi
+
+        if ! [[ " $available_uart_ports " == *" $default_uart_port "* ]]
+        then
+            # Stored UART port is not available
+            default_uart_port=
+        fi
+
+        default_uart_port_selection=
+
+        if [ -n "$default_uart_port" ] ; then
+            default_uart_port_selection=". The default is $default_uart_port"
+        fi
+
+        read -rp "Choose UART port out of: $available_uart_ports$default_uart_port_selection: " uart_port
+
+        uart_port=${uart_port:-$default_uart_port}
+
+        [[ "$uart_port" =~ ^[0-9]+$ ]] ||
+        error "the selection '$uart_port' should be a decimal number"
+
+        [[ " $available_uart_ports " == *" $uart_port "* ]] ||
+        error "the selection '$uart_port' is not among the available uart_ports: $available_uart_ports"
+    fi
+
+    #-------------------------------------------------------------------------
+
+    dev="/dev/tty${tty_suffix}$uart_port"
+
+    [ -c $dev ] ||
+    error "$dev does not exist, is not connected or not a serial device"
+
+    printf "$uart_port" > $last_uart_port_file
+
+    #-------------------------------------------------------------------------
+
+    if [[ "$OSTYPE" == "linux-gnu"* ]] || [[ "$OSTYPE" = "darwin"* ]]
+    then
+        dev_grp=$(stat -c "%G" $dev 2>/dev/null)
+
+        [ -n "$dev_grp" ] || error "Cannot determine the groups that owns $dev"
+
+        # id
+        #
+        # -G, --groups  print all group IDs
+        # -n, --name    print a name instead of a number, for -ugG
+        #
+        # grep
+        #
+        # -w, --word-regexp      match only whole words
+        # -q, --quiet, --silent  suppress all normal output
+
+        if ! id -nG | grep -qw $dev_grp
+        then
+            error "User \"$USER\" is not in \"$dev_grp\" group."  \
+                  "Run: \"sudo usermod -a -G $dev_grp $USER\","   \
+                  "then reboot and try again."                    \
+                  "(On some systems it is sufficient"             \
+                  "to logout and login instead of the reboot)."
+        fi
+    fi
+
+    case $riscv_core in
+        "aps")
+            [ -f final ] || error "Cannot find 'final'"
+            if [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" ]] ; then
+                dev="COM$((uart_port + 1))"
+            fi
+
+            PY3=""
+            if python3 -c "import serial" 2>/dev/null; then
+              PY3=python3
+            elif python -c "import serial" 2>/dev/null; then
+              PY3=python
+            else
+                error "Python or package 'serial' is not installed." \
+                      "Please install it via 'pip install pyserial'."
+            fi
+
+            $PY3 "$cpu_dir/program/flash.py" final $dev
+            ;;
+        *)
+            [ -f $program_mem32 ] || error "Cannot find '$program_mem32'"
+
+            info "uploading '$program_mem32' to $dev"
+
+            if [[ "$OSTYPE" == "linux-gnu"* ]] \
+                || [[ "$OSTYPE" = "darwin"* ]] ; then
+                extra_stty_arg="raw "
+            fi
+            stty -F $dev ${extra_stty_arg-}speed 115200 \
+                -crtscts cs8 -parenb -cstopb > /dev/null \
+                || error "USB-to-UART is not working"
+            cat $program_mem32 > $dev \
+                || error "Error sending '$program_mem32' to $dev"
+            ;;
+    esac
+
+}
+
+#-----------------------------------------------------------------------------
+
+riscv_choose_another_core_for_software ()
+{
+    echo $0 riscv_choose_another_core_for_software
+}
